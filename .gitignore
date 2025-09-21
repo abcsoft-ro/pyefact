@@ -1,0 +1,33 @@
+# Fișiere de configurare a mediului virtual și secrete
+.env
+
+# Directorul mediului virtual Python
+venv/
+.venv/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Fișiere specifice IDE-urilor
+.idea/
+.vscode/
+
+# Fișiere de build și distribuție
+build/
+dist/
+*.egg-info/
+
+# Director pentru XML-uri de debug
+debug_xmls/
+
+# Director cu fișierele bazei de date (MDF, LDF)
+data/
+
+# Director marketing (este folosit pentru materiale promoționale)
+marketing/
+
+# Director debug (este folosit pentru fișiere temporare de testare)
+debug/

@@ -1,0 +1,43 @@
+(.venv) D:\ABCSoft\pyefact>pip install python-pkcs11
+Collecting python-pkcs11
+  Downloading python_pkcs11-0.9.0-cp311-cp311-win_amd64.whl.metadata (17 kB)
+Collecting asn1crypto>=1.5.1 (from python-pkcs11)
+  Downloading asn1crypto-1.5.1-py2.py3-none-any.whl.metadata (13 kB)
+Downloading python_pkcs11-0.9.0-cp311-cp311-win_amd64.whl (286 kB)
+Downloading asn1crypto-1.5.1-py2.py3-none-any.whl (105 kB)
+Installing collected packages: asn1crypto, python-pkcs11
+Successfully installed asn1crypto-1.5.1 python-pkcs11-0.9.0
+
+Traceback (most recent call last):
+  File "D:\ABCSoft\pyefact\pkcs11_vendored.py", line 17, in <module>
+    from pkcs11.contrib.pyssl import PysslSession
+ModuleNotFoundError: No module named 'pkcs11.contrib'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\ABCSoft\pyefact\anaf_api.py", line 18, in <module>
+    from pkcs11_vendored import Pkcs11Adapter
+  File "D:\ABCSoft\pyefact\pkcs11_vendored.py", line 19, in <module>
+    raise ImportError(
+ImportError: Dependința 'python-pkcs11' nu a putut fi importată. Vă rugăm să o instalați rulând comanda în terminal (cu mediul virtual activat):
+
+pip install python-pkcs11
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\ABCSoft\pyefact\launcher.py", line 18, in <module>
+    from background_service import run_async_service
+  File "D:\ABCSoft\pyefact\background_service.py", line 7, in <module>
+    from anaf_api import check_invoice_statuses_periodically
+  File "D:\ABCSoft\pyefact\anaf_api.py", line 20, in <module>
+    raise ImportError(f"Fișierul 'pkcs11_vendored.py' lipsește sau este corupt. Eroare: {e}") from e
+ImportError: Fișierul 'pkcs11_vendored.py' lipsește sau este corupt. Eroare: Dependința 'python-pkcs11' nu a putut fi importată. Vă rugăm să o instalați rulând comanda în terminal (cu mediul virtual activat):
+
+Nu esti atent. In ultimul log al instalarilor pe care ti l-am dat ai asa:
+Downloading pyopenssl-25.3.0-py3-none-any.whl (57 kB)
+Downloading cryptography-46.0.1-cp311-abi3-win_amd64.whl (3.5 MB)
+deci cryptography-46.0.1 esye copilat pentru versiunea python 3.11
+
+Deci nu asta e cauza!
