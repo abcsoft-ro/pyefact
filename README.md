@@ -117,6 +117,8 @@ Aplicația va porni un server local și va deschide o pagină în browser.
 Token-urile de acces ANAF expiră. Click pe butonul Refresh token pentru a prelungi cu 3 luni durata de valabilitate a tokenului existent sau Click pe butonul Obtine token nou pentru a primi un nou token.
 In acest fin urma caz aplicatia va deschide o fereastră de browser. Autentificați-vă cu tokenul criptografic, iar scriptul va extrage automat noile token-uri și le va salva în fișierul `.env`.
 
+![Screenshot al aplicației py-efactura Setari variabile de mediu] (https://github.com/abcsoft-ro/pyefact/blob/main/assets/Setari_variabile_de_mediu.png)
+
 ## 🏗️ Structura Proiectului
 
 ```
@@ -141,3 +143,8 @@ pyefact/
 ## 📄 Licență
 
 Acest proiect este distribuit sub licența MIT. Vezi fișierul `LICENSE` pentru mai multe detalii.
+
+## 📄 Screenshots
+
+![Screenshot al aplicației py-efactura incarcare facturi XML] (https://github.com/abcsoft-ro/pyefact/blob/main/assets/Incarcare_Facturi_XML.png)
+
