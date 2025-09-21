@@ -1,8 +1,7 @@
-[README.md](https://github.com/user-attachments/files/22451358/README.md)
 # py-efactura
 
-`py-efactura` este o aplicație web dezvoltată în Python cu Streamlit, concepută pentru a simplifica interacțiunea cu sistemul național de facturare electronică ANAF e-Factura. Aplicația oferă o interfață grafică intuitivă pentru trimiterea, verificarea și descărcarea facturilor, direct din sistemul propriu.
-Deasemnea aplicatia este construita pentru a fi integrata foarte usor in sisteme ERP sau alte sisteme pentru a gestiona sigur si eficient interactiunea cu endpoint-urile ANAF e-Factura.
+`py-efactura` este o aplicație web dezvoltată în Python cu Streamlit, concepută pentru a simplifica interacțiunea cu sistemul național de facturare electronică ANAF e-Factura. Aplicația oferă o interfață grafică intuitivă pentru trimiterea, verificarea și descărcarea facturilor, direct din sistemul propriu.Deasemnea aplicatia este construita pentru a fi integrata foarte usor in sisteme ERP sau alte sisteme pentru a gestiona sigur si eficient interactiunea cu endpoint-urile ANAF e-Factura. !Screenshot Aplicație
+
 !Screenshot Aplicație
 
 ## ✨ Funcționalități Principale
@@ -21,7 +20,7 @@ Deasemnea aplicatia este construita pentru a fi integrata foarte usor in sisteme
 
 ## 📋 Cerințe
 
-*   **Python:** Versiunea **3.11** este recomandată pentru compatibilitate maximă (versiunile 3.12+ pot avea probleme cu anumite dependențe).
+*   **Python:** Versiunea **3.12** este recomandată pentru compatibilitate maximă (versiunile 3.13+ pot avea probleme cu anumite dependențe).
 *   **Git:** Pentru a clona repository-ul.
 *   **Microsoft SQL Server:** O instanță locală sau de rețea (inclusiv versiunea gratuită Express).
 *   **(Opțional) Driver Token USB:** Dacă se folosește autentificarea PKCS#11, driverul specific token-ului (ex: SafeNet Authentication Client) trebuie instalat.
@@ -115,13 +114,8 @@ Aplicația va porni un server local și va deschide o pagină în browser.
 
 ### Reînnoirea Token-ului de Acces
 
-Token-urile de acces ANAF expiră. Pentru a obține unul nou click pe butonul Refresh token sau Obtine token nou :
-
-```bash
-python get_token.py
-```
-
-Acesta va deschide o fereastră de browser. Autentificați-vă, iar scriptul va extrage automat noile token-uri și le va salva în fișierul `.env`.
+Token-urile de acces ANAF expiră. Click pe butonul Refresh token pentru a prelungii cu 3 luni durata de valabilitate a tokenului existent sau Click pe butonul Obtine token nou pentru a primi un nou token.
+In acest fin urma caz aplicatia va deschide o fereastră de browser. Autentificați-vă cu tokenul criptografic, iar scriptul va extrage automat noile token-uri și le va salva în fișierul `.env`.
 
 ## 🏗️ Structura Proiectului
 
