@@ -114,7 +114,7 @@ Aplicația va porni un server local și va deschide o pagină în browser.
 
 ### Reînnoirea Token-ului de Acces
 
-Token-urile de acces ANAF expiră. Click pe butonul Refresh token pentru a prelungii cu 3 luni durata de valabilitate a tokenului existent sau Click pe butonul Obtine token nou pentru a primi un nou token.
+Token-urile de acces ANAF expiră. Click pe butonul Refresh token pentru a prelungi cu 3 luni durata de valabilitate a tokenului existent sau Click pe butonul Obtine token nou pentru a primi un nou token.
 In acest fin urma caz aplicatia va deschide o fereastră de browser. Autentificați-vă cu tokenul criptografic, iar scriptul va extrage automat noile token-uri și le va salva în fișierul `.env`.
 
 ## 🏗️ Structura Proiectului
