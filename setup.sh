@@ -5,7 +5,7 @@ set -e
 
 # --- Configurare ---
 # !!! IMPORTANT: Înlocuiți cu URL-ul real al repository-ului dumneavoastră Git.
-REPO_URL="https://github.com/utilizator/pyefact.git"
+REPO_URL="https://github.com/abcsoft-ro/pyefact.git"
 PROJECT_DIR="pyefact"
 
 echo "--- Pasul 1: Clonarea proiectului de pe Git ---"

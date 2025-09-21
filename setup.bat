@@ -3,7 +3,7 @@ setlocal
 
 REM --- Configurare ---
 REM !!! IMPORTANT: Inlocuiti cu URL-ul real al repository-ului dumneavoastra Git.
-set "REPO_URL=https://github.com/utilizator/pyefact.git"
+set "REPO_URL=https://github.com/abcsoft-ro/pyefact.git"
 set "PROJECT_DIR=pyefact"
 
 echo --- Pasul 1: Clonarea proiectului de pe Git ---
