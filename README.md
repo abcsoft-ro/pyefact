@@ -1,8 +1,8 @@
 # py-efactura
 
-`py-efactura` este o aplicație web dezvoltată în Python cu Streamlit, concepută pentru a simplifica interacțiunea cu sistemul național de facturare electronică ANAF e-Factura. Aplicația oferă o interfață grafică intuitivă pentru trimiterea, verificarea și descărcarea facturilor, direct din sistemul propriu.Deasemnea aplicatia este construita pentru a fi integrata foarte usor in sisteme ERP sau alte sisteme pentru a gestiona sigur si eficient interactiunea cu endpoint-urile ANAF e-Factura. !Screenshot Aplicație
+`py-efactura` este o aplicație web dezvoltată în Python cu Streamlit, concepută pentru a simplifica interacțiunea cu sistemul național de facturare electronică ANAF e-Factura. Aplicația oferă o interfață grafică intuitivă pentru trimiterea, verificarea și descărcarea facturilor, direct din sistemul propriu.Deasemnea aplicatia este construita pentru a fi integrata foarte usor in sisteme ERP sau alte sisteme pentru a gestiona sigur si eficient interactiunea cu endpoint-urile ANAF e-Factura.
 
-!Screenshot Aplicație
+![Screenshot al aplicației py-efactura incarcare facturi XML](https://github.com/abcsoft-ro/pyefact/blob/main/assets/Incarcare_Facturi_XML.png)
 
 ## ✨ Funcționalități Principale
 
@@ -51,13 +51,13 @@ Aceste scripturi vor clona automat repository-ul, vor crea un mediu virtual, vor
 3.  Creează și activează un mediu virtual:
     ```bash
     # Creează mediul
-    python -m venv venv
+    python -m venv .venv
     
     # Activează mediul (Windows)
-    venv\Scripts\activate
+    .venv\Scripts\activate
     
     # Activează mediul (Linux/macOS)
-    source venv/bin/activate
+    source .venv/bin/activate
     ```
 4.  Instalează dependențele:
     ```bash
@@ -102,8 +102,8 @@ PKCS11_LIBRARY_PATH="C:\Windows\System32\eToken.dll"
 ## ▶️ Utilizare
 
 1.  **Activare mediu virtual:**
-    *   Windows: `venv\Scripts\activate`
-    *   Linux/macOS: `source venv/bin/activate`
+    *   Windows: `.venv\Scripts\activate`
+    *   Linux/macOS: `source .venv/bin/activate`
 2.  **Pornire aplicație:**
     ```bash
     python launcher.py
@@ -123,7 +123,7 @@ In acest fin urma caz aplicatia va deschide o fereastră de browser. Autentifica
 pyefact/
 ├── data/                 # Fișierele bazei de date (ignorate de Git)
 ├── pages/                # Paginile secundare ale aplicației Streamlit
-├── venv/                 # Mediul virtual Python (ignorat de Git)
+├── .venv/                # Mediul virtual Python (ignorat de Git)
 ├── anaf_api.py           # Clasa principală pentru interacțiunea cu API-ul ANAF
 ├── background_service.py # Logica pentru serviciul de fundal
 ├── db_utils.py           # Utilitare pentru conexiunea la baza de date

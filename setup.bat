@@ -28,18 +28,18 @@ echo Am intrat in directorul: %cd%
 echo.
 echo --- Pasul 2: Crearea mediului virtual Python ---
 REM Folosim 'python' care este comanda standard pe Windows.
-python -m venv venv
+python -m venv .venv
 if errorlevel 1 (
     echo.
     echo EROARE: Crearea mediului virtual a esuat. Asigurati-va ca Python este instalat si adaugat in PATH.
     goto:eof
 )
-echo Mediul virtual 'venv' a fost creat cu succes.
+echo Mediul virtual '.venv' a fost creat cu succes.
 
 echo.
 echo --- Pasul 3: Activarea mediului virtual ---
 REM Folosim 'call' pentru a executa scriptul de activare si a reveni la acest script.
-call venv\Scripts\activate.bat
+call .venv\Scripts\activate.bat
 echo Mediul virtual a fost activat.
 
 echo.
@@ -91,7 +91,7 @@ echo.
 echo PASII URMATORI:
 echo 1. Creati si configurati fisierul '.env' conform exemplului din pagina de Setari.
 echo 2. Pentru a porni aplicatia, deschideti un terminal nou, activati mediul virtual
-echo    (cu comanda: %PROJECT_DIR%\venv\Scripts\activate) si apoi rulati: python launcher.py
+echo    (cu comanda: %PROJECT_DIR%\.venv\Scripts\activate) si apoi rulati: python launcher.py
 echo.
 
 endlocal

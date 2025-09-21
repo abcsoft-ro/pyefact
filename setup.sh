@@ -25,14 +25,14 @@ echo ""
 echo "--- Pasul 2: Crearea mediului virtual Python ---"
 # Folosim 'python3' care este standard pe majoritatea sistemelor Linux/macOS.
 # Dacă comanda implicită este 'python', puteți modifica mai jos.
-python3 -m venv venv
-echo "Mediul virtual 'venv' a fost creat cu succes."
+python3 -m venv .venv
+echo "Mediul virtual '.venv' a fost creat cu succes."
 
 echo ""
 echo "--- Pasul 3: Activarea mediului virtual ---"
-source venv/bin/activate
+source .venv/bin/activate
 echo "Mediul virtual a fost activat."
-echo "(Notă: Pentru Windows, comanda de activare este: venv\Scripts\activate)"
+echo "(Notă: Pentru Windows, comanda de activare este: .venv\Scripts\activate)"
 
 echo ""
 echo "--- Pasul 4: Actualizarea pip ---"
