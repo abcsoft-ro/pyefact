@@ -36,7 +36,7 @@ echo "(Notă: Pentru Windows, comanda de activare este: .venv\Scripts\activate)"
 
 echo ""
 echo "--- Pasul 4: Actualizarea pip ---"
-pip install --upgrade pip
+python -m pip install --upgrade pip
 echo "pip a fost actualizat la cea mai recentă versiune."
 
 echo ""

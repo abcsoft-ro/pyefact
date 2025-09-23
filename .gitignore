@@ -31,3 +31,6 @@ marketing/
 
 # Director debug (este folosit pentru fișiere temporare de testare)
 debug/
+# Fișiere de testare
+tests/
+*.spec
