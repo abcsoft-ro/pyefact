@@ -1,6 +1,6 @@
 # py-efactura
 
-`py-efactura` este o aplicație web dezvoltată în Python cu Streamlit, concepută pentru a simplifica interacțiunea cu sistemul național de facturare electronică ANAF e-Factura. Aplicația oferă o interfață grafică intuitivă pentru trimiterea, verificarea și descărcarea facturilor, direct din sistemul propriu.Deasemnea aplicatia este construita pentru a fi integrata foarte usor in sisteme ERP sau alte sisteme pentru a gestiona sigur si eficient interactiunea cu endpoint-urile ANAF e-Factura.
+`py-efactura` is a web application developed in Python with Streamlit, designed to simplify interaction with the romanian national electronic invoicing system, ANAF e-Factura. The application provides an intuitive graphical interface for sending, verifying, and downloading invoices directly from your own system. The application is also built to be easily integrated into ERP systems or other systems to securely and efficiently manage interaction with the ANAF e-Factura endpoints.
 
 ![Screenshot al aplicației py-efactura incarcare facturi XML](https://github.com/abcsoft-ro/pyefact/blob/main/assets/Incarcare_Facturi_XML.png)
 
