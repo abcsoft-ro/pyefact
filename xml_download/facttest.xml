@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+<cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+<cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:efactura.mfinante.ro:CIUS-RO:1.0.1</cbc:CustomizationID><!--BT-24 cen.eu:en16931:2017#compliant#urn:efactura.mfinante.ro:CIUS-RO:1.0.0-->
+<cbc:ID>ROC60205</cbc:ID>
+<cbc:IssueDate>2025-09-26</cbc:IssueDate>
+<cbc:DueDate>2025-09-26</cbc:DueDate>
+<cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+<cbc:Note>#TVA la incasare</cbc:Note>
+<cbc:Note>TVA LA INCASARE - PACKETA SAMEDAY</cbc:Note>
+<cbc:DocumentCurrencyCode>RON</cbc:DocumentCurrencyCode>
+<cbc:TaxCurrencyCode>RON</cbc:TaxCurrencyCode>
+<cac:InvoicePeriod>
+<cbc:DescriptionCode>432</cbc:DescriptionCode>
+</cac:InvoicePeriod>
+<cac:AccountingSupplierParty><!--BG-4 VANZATOR-->
+<cac:Party>
+<cbc:EndpointID schemeID="EM">digitalrecord2001@yahoo.com</cbc:EndpointID>
+<cac:PartyName>
+<cbc:Name>PRO ROCK SRL</cbc:Name><!--BT-28-->
+</cac:PartyName>
+<cac:PostalAddress><!--BG-5-->
+<cbc:StreetName>BUCURESTI,STR. RM.VILCEA NR.9 SECT.3</cbc:StreetName><!--BT-35-->
+<cbc:CityName>SECTOR3</cbc:CityName><!--BT-37-->
+<cbc:PostalZone>031814</cbc:PostalZone><!--BT-38-->
+<cbc:CountrySubentity>RO-B</cbc:CountrySubentity><!--BT-39-->
+<cac:AddressLine>
+<cbc:Line>BUCURESTI,STR. RM.VILCEA NR.9 SECT.3</cbc:Line><!--BT-162-->
+</cac:AddressLine>
+<cac:Country>
+<cbc:IdentificationCode>RO</cbc:IdentificationCode><!--BT-40-->
+</cac:Country>
+</cac:PostalAddress>
+<cac:PartyTaxScheme>
+<cbc:CompanyID>RO15279435</cbc:CompanyID><!--BT-31-->
+<cac:TaxScheme>
+<cbc:ID>VAT</cbc:ID>
+</cac:TaxScheme>
+</cac:PartyTaxScheme>
+<cac:PartyLegalEntity>
+<cbc:RegistrationName>PRO ROCK SRL</cbc:RegistrationName><!--BT-27-->
+<cbc:CompanyID>J40/3676/2003</cbc:CompanyID><!--BT-30 BT-30-1-->
+<cbc:CompanyLegalForm>J40/3676/2003</cbc:CompanyLegalForm><!--BT-33-->
+</cac:PartyLegalEntity>
+<cac:Contact><!--BG-6-->
+<cbc:Name>Padure Valeriu</cbc:Name><!--BT-41-->
+<cbc:Telephone>0724527054</cbc:Telephone><!--BT-42-->
+<cbc:ElectronicMail>digitalrecord2001@yahoo.com</cbc:ElectronicMail><!--BT-43-->
+</cac:Contact>
+</cac:Party>
+</cac:AccountingSupplierParty>
+<cac:AccountingCustomerParty><!--BG-7 CUMPARATOR-->
+<cac:Party>
+<cac:PartyName>
+<cbc:Name>Ionescu Ctin</cbc:Name><!--BT-45-->
+</cac:PartyName>
+<cac:PostalAddress><!--BG-8-->
+<cbc:StreetName>-, nr.,-,et. -, ap. -, 2</cbc:StreetName><!--BT-50-->
+<cbc:CityName>SECTOR2</cbc:CityName><!--BT-52-->
+<cbc:CountrySubentity>RO-B</cbc:CountrySubentity><!--BT-54-->
+<cac:Country>
+<cbc:IdentificationCode>RO</cbc:IdentificationCode><!--BT-55-->
+</cac:Country>
+</cac:PostalAddress>
+<cac:PartyLegalEntity>
+<cbc:RegistrationName>Ionescu Ctin</cbc:RegistrationName><!--BT-44-->
+<cbc:CompanyID>0000000000000</cbc:CompanyID><!--BT-47 BT-47-1-->
+</cac:PartyLegalEntity>
+<cac:Contact><!--BG-9-->
+</cac:Contact>
+</cac:Party>
+</cac:AccountingCustomerParty>
+<cac:PaymentMeans>
+<cbc:PaymentMeansCode>42</cbc:PaymentMeansCode>
+<cac:PayeeFinancialAccount>
+<cbc:ID>RO06BACX0000003836205000</cbc:ID>
+<cbc:Name>UNICREDIT</cbc:Name>
+</cac:PayeeFinancialAccount>
+</cac:PaymentMeans>
+<cac:TaxTotal>
+<cbc:TaxAmount currencyID="RON">37.99</cbc:TaxAmount><!--BT-110 BT-111-->
+<cac:TaxSubtotal><!--BG-23(1)-->
+<cbc:TaxableAmount currencyID="RON">180.91</cbc:TaxableAmount><!--BT-116-->
+<cbc:TaxAmount currencyID="RON">37.99</cbc:TaxAmount><!--BT-117-->
+<cac:TaxCategory>
+<cbc:ID>S</cbc:ID><!--BT-118-->
+<cbc:Percent>21</cbc:Percent><!--BT-119-->
+<cac:TaxScheme>
+<cbc:ID>VAT</cbc:ID>
+</cac:TaxScheme>
+</cac:TaxCategory>
+</cac:TaxSubtotal>
+</cac:TaxTotal>
+<cac:LegalMonetaryTotal><!--BG-22-->
+<cbc:LineExtensionAmount currencyID="RON">180.91</cbc:LineExtensionAmount><!--BT-106-->
+<cbc:TaxExclusiveAmount currencyID="RON">180.91</cbc:TaxExclusiveAmount><!--BT-109-->
+<cbc:TaxInclusiveAmount currencyID="RON">218.9</cbc:TaxInclusiveAmount><!--BT-112-->
+<cbc:PayableAmount currencyID="RON">218.9</cbc:PayableAmount><!--BT-115-->
+</cac:LegalMonetaryTotal>
+<cac:InvoiceLine><!--BG-25(1)-->
+<cbc:ID>1</cbc:ID><!--BT-126-->
+<cbc:InvoicedQuantity unitCode="C62">1.000</cbc:InvoicedQuantity><!--BT-129 BT-130-->
+<cbc:LineExtensionAmount currencyID="RON">12.31</cbc:LineExtensionAmount><!--BT-131-->
+<cac:Item><!--BG-31-->
+<cbc:Name>TRANSPORT CURIER</cbc:Name><!--BT-153-->
+<cac:SellersItemIdentification>
+<cbc:ID>11111</cbc:ID><!--BT-155-->
+</cac:SellersItemIdentification>
+<cac:ClassifiedTaxCategory><!--BG-30-->
+<cbc:ID>S</cbc:ID><!--BT-151-->
+<cbc:Percent>21</cbc:Percent><!--BT-152-->
+<cac:TaxScheme>
+<cbc:ID>VAT</cbc:ID>
+</cac:TaxScheme>
+</cac:ClassifiedTaxCategory>
+</cac:Item>
+<cac:Price><!--BG-29-->
+<cbc:PriceAmount currencyID="RON">12.31</cbc:PriceAmount><!--BT-146-->
+</cac:Price>
+</cac:InvoiceLine>
+<cac:InvoiceLine><!--BG-25(1)-->
+<cbc:ID>2</cbc:ID><!--BT-126-->
+<cbc:InvoicedQuantity unitCode="C62">1.000</cbc:InvoicedQuantity><!--BT-129 BT-130-->
+<cbc:LineExtensionAmount currencyID="RON">103.31</cbc:LineExtensionAmount><!--BT-131-->
+<cac:Item><!--BG-31-->
+<cbc:Name>ROGER WATERS - THIS Is Not A DRILL : Live From Prague [BD]</cbc:Name><!--BT-153-->
+<cac:SellersItemIdentification>
+<cbc:ID>724006024</cbc:ID><!--BT-155-->
+</cac:SellersItemIdentification>
+<cac:ClassifiedTaxCategory><!--BG-30-->
+<cbc:ID>S</cbc:ID><!--BT-151-->
+<cbc:Percent>21</cbc:Percent><!--BT-152-->
+<cac:TaxScheme>
+<cbc:ID>VAT</cbc:ID>
+</cac:TaxScheme>
+</cac:ClassifiedTaxCategory>
+</cac:Item>
+<cac:Price><!--BG-29-->
+<cbc:PriceAmount currencyID="RON">103.31</cbc:PriceAmount><!--BT-146-->
+</cac:Price>
+</cac:InvoiceLine>
+<cac:InvoiceLine><!--BG-25(1)-->
+<cbc:ID>3</cbc:ID><!--BT-126-->
+<cbc:InvoicedQuantity unitCode="C62">1.000</cbc:InvoicedQuantity><!--BT-129 BT-130-->
+<cbc:LineExtensionAmount currencyID="RON">65.29</cbc:LineExtensionAmount><!--BT-131-->
+<cac:Item><!--BG-31-->
+<cbc:Name>JEAN MICHEL JARRE - LIVE In BRATISLAVA (bd)</cbc:Name><!--BT-153-->
+<cac:SellersItemIdentification>
+<cbc:ID>724006090</cbc:ID><!--BT-155-->
+</cac:SellersItemIdentification>
+<cac:ClassifiedTaxCategory><!--BG-30-->
+<cbc:ID>S</cbc:ID><!--BT-151-->
+<cbc:Percent>21</cbc:Percent><!--BT-152-->
+<cac:TaxScheme>
+<cbc:ID>VAT</cbc:ID>
+</cac:TaxScheme>
+</cac:ClassifiedTaxCategory>
+</cac:Item>
+<cac:Price><!--BG-29-->
+<cbc:PriceAmount currencyID="RON">65.29</cbc:PriceAmount><!--BT-146-->
+</cac:Price>
+</cac:InvoiceLine>
+</Invoice>
+<!--xml generat cu StocManager Access vers 04 iunie 2025-->

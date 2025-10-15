@@ -1,8 +1,10 @@
 @echo off
 setlocal
-
+REM --- Descriere ---
+REM Acest script este destinat dezvoltatorilor sau utilizatorilor care cloneaza
+REM proiectul direct de pe GitHub. El cloneaza repository-ul si apoi configureaza mediul.
+REM Pentru o distributie care contine deja fisierele, folositi un alt script (ex: installer_setup.bat).
 REM --- Configurare ---
-REM !!! IMPORTANT: Inlocuiti cu URL-ul real al repository-ului dumneavoastra Git.
 set "REPO_URL=https://github.com/abcsoft-ro/pyefact.git"
 set "PROJECT_DIR=pyefact"
 

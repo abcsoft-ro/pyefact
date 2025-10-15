@@ -1,6 +1,6 @@
 # Fișiere de configurare a mediului virtual și secrete
 .env
-
+token.json
 # Directorul mediului virtual Python
 venv/
 .venv/

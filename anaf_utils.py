@@ -45,7 +45,6 @@ def get_anaf_client():
     cert_path = os.getenv("ANAF_CERT_PATH")
     key_path = os.getenv("ANAF_KEY_PATH")
     pkcs11_lib = os.getenv("PKCS11_LIB_PATH")
-    pkcs11_lib= None #--- NOU: Dezactivare temporară PKCS#11 pentru testare fără token ---
     client_args = {}
 
     if access_token:
@@ -69,10 +68,6 @@ def get_anaf_client():
 
         # Pentru PKCS#11, PIN-ul este citit din session_state.
         # Funcția UI `display_pkcs11_auth_sidebar` trebuie apelată pe pagină înainte de acest apel.
-        if 'pkcs11_pin' not in st.session_state:
-            st.warning("Autentificarea cu token USB necesită introducerea PIN-ului în bara laterală.")
-            st.stop()
-        
         client_args = {"pkcs11_lib": pkcs11_lib, "pkcs11_pin": st.session_state.get('pkcs11_pin')}
     
     if not auth_method:

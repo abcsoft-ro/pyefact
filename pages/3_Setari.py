@@ -1,14 +1,18 @@
 import streamlit as st
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key, find_dotenv
 import base64
 import json
 from datetime import datetime
 from sqlalchemy import create_engine
 import time
-
-import subprocess
 import sys
+import subprocess
+
+# Adăugăm calea proiectului pentru a putea importa clasa Anafgettoken
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from anaf_oauth2 import Anafgettoken
+
 # Este o practică bună să încărcăm .env și aici, pentru a asigura funcționarea
 # paginii în diverse contexte de rulare.
 load_dotenv()
@@ -194,14 +198,81 @@ def display_anaf_token_status():
         else:
             masked_value = f"{refresh_token[:4]}...{refresh_token[-4:]}" if len(refresh_token) > 8 else refresh_token
             st.success(f"Încărcat: `{masked_value}`")
-        
-        btn_col1, btn_col2 = st.columns(2)
+
+        # Reorganizăm butoanele pe 3 coloane pentru a adăuga butonul de revocare
+        btn_col1, btn_col2, btn_col3 = st.columns(3)
 
         with btn_col1:
             if st.button("Refresh Access Token"):
-                st.info("Funcționalitatea de refresh token va fi implementată ulterior.")
-        
+                with st.spinner("Se reîmprospătează token-ul..."):
+                    # --- PAS CRITIC ---
+                    # Forțăm reîncărcarea variabilelor din .env pentru a ne asigura că folosim cele mai recente token-uri.
+                    load_dotenv(override=True)
+
+                    # Citim toate variabilele necesare
+                    access_token = os.getenv("ANAF_ACCESS_TOKEN")
+                    refresh_token = os.getenv("ANAF_REFRESH_TOKEN")
+                    client_id = os.getenv("ANAF_CLIENT_ID")
+                    client_secret = os.getenv("ANAF_CLIENT_SECRET")
+
+                    if not all([access_token, refresh_token, client_id, client_secret]):
+                        st.error("Eroare: Asigurați-vă că variabilele ANAF_ACCESS_TOKEN, ANAF_REFRESH_TOKEN, ANAF_CLIENT_ID și ANAF_CLIENT_SECRET sunt setate în fișierul .env.")
+                    else:
+                        try:
+                            # Inițiem clientul. PIN-ul și redirect_uri nu sunt necesare pentru refresh.
+                            anaf_client = Anafgettoken(
+                                client_id=client_id,
+                                client_secret=client_secret,
+                                redirect_uri="", # Nu este necesar pentru acest flux
+                                pin="" # Nu este necesar pentru acest flux
+                            )
+                            
+                            new_token_data = anaf_client.refresh_token(access_token, refresh_token)
+                            
+                            new_access_token = new_token_data.get("access_token")
+                            # Fluxul de refresh returnează doar un nou access_token.
+                            # Refresh token-ul rămâne același.
+
+                            if new_access_token:
+                                env_file = find_dotenv()
+                                set_key(env_file, "ANAF_ACCESS_TOKEN", new_access_token)
+                                
+                                st.success("Token-ul de acces a fost reîmprospătat cu succes! Se reîncarcă pagina...")
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error("Răspunsul de la ANAF nu conține noul 'access_token'.")
+                                st.json(new_token_data)
+
+                        except Exception as e:
+                            st.error(f"A apărut o eroare la reîmprospătarea token-ului:")
+                            st.exception(e)
+
         with btn_col2:
+            if st.button("Revoca Tokenul", help="Invalidează permanent token-ul de acces și cel de refresh. Va fi necesară o nouă autentificare."):
+                # Folosim session_state pentru a afișa un dialog de confirmare
+                st.session_state['show_revoke_confirmation'] = True
+
+            if st.session_state.get('show_revoke_confirmation'):
+                st.warning("**Sunteți sigur că doriți să revocați token-ul?** Această acțiune este ireversibilă și va necesita o nouă autentificare completă.")
+                
+                # Creăm coloane pentru butoanele de confirmare
+                # Am mărit lățimea relativă a coloanelor pentru a se potrivi cu textul butoanelor.
+                confirm_col1, confirm_col2, _ = st.columns([2, 2, 3])
+                with confirm_col1:
+                    if st.button("DA, revocă", type="primary", use_container_width=True):
+                        st.session_state['show_revoke_inprogress_message'] = True
+                        st.session_state['show_revoke_confirmation'] = False # Ascundem dialogul
+                        st.rerun()
+                
+                with confirm_col2:
+                    if st.button("Cancel", use_container_width=True):
+                        st.session_state['show_revoke_confirmation'] = False # Ascundem dialogul
+                        st.rerun()
+
+            if st.session_state.pop('show_revoke_inprogress_message', False):
+                st.info("Funcționalitate în curs de implementare.")
+        with btn_col3:
             if st.button("Obține un Token Nou", type="primary", help="Lansează o fereastră de browser pentru a vă autentifica și a obține un nou set de token-uri."):
                 with st.spinner("Se lansează procesul de autentificare... Vă rugăm urmați instrucțiunile din terminal și fereastra de browser."):
                     try:
@@ -244,6 +315,11 @@ st.subheader("Metoda 1: Autentificare OAuth2")
 st.info("Această metodă folosește un `access_token` și un `refresh_token` pentru autentificare.")
 display_anaf_token_status()
 
+st.markdown("##### Credențiale Client OAuth2")
+st.info("Aceste credențiale sunt necesare pentru a reîmprospăta token-ul.")
+display_env_var("ANAF_CLIENT_ID", sensitive=True)
+display_env_var("ANAF_CLIENT_SECRET", sensitive=True)
+
 st.subheader("Metoda 2: Autentificare cu Certificat Digital")
 st.info("Această metodă folosește un certificat digital calificat, salvat în fișiere de tip .pem.")
 display_file_path_var("ANAF_CERT_PATH")
@@ -274,7 +350,7 @@ if st.button("Testează Conexiunea la Baza de Date"):
 st.markdown("---")
 st.write("Exemplu de conținut pentru fișierul `.env`:")
 st.code("""# --- Setări Generale ANAF ---
-# Calea către directorul unde se vor plasa fișierele XML pentru a fi încărcate în ANAF.
+# Calea către directorul unde se vor plasa fișierele XML pentru a fi încărcate în ANAF
 XML_UPLOAD_FOLDER_PATH=C:\\pyefact\\xml_upload
 
 ANAF_CIF=...
@@ -282,6 +358,10 @@ ANAF_CIF=...
 # --- Metoda 1: Autentificare OAuth2 ---
 ANAF_ACCESS_TOKEN=...
 ANAF_REFRESH_TOKEN=...
+
+# --- Credențiale Client OAuth2 (necesare pentru refresh token) ---
+ANAF_CLIENT_ID=...
+ANAF_CLIENT_SECRET=...
 
 # --- Metoda 2: Autentificare cu Certificat Digital (căi absolute recomandate) ---
 ANAF_CERT_PATH=C:\\path\\to\\certificat.pem
@@ -291,5 +371,12 @@ ANAF_KEY_PATH=C:\\path\\to\\cheie_privata.pem
 # Calea către fișierul .dll al driverului token-ului (ex: "C:\\Windows\\System32\\eTPKCS11.dll")
 PKCS11_LIB_PATH=C:\\Windows\\System32\\eTPKCS11.dll
 
-# --- Setări Bază de Date ---
-DATABASE_CONNECTION_URI=mssql+pyodbc://user:password@server/database?driver=ODBC+Driver+17+for+SQL+Server""", language="ini")
+# --- Setări Bază de Date (alegeți una din opțiuni) ---
+
+# Opțiunea A: Autentificare SQL Server (cu utilizator și parolă)
+# Asigurați-vă că parola nu conține caractere speciale sau, dacă da, că este encodată (URL-encoded).
+DATABASE_CONNECTION_URI="mssql+pyodbc://user:password@server_name\\SQLEXPRESS/database_name?driver=ODBC+Driver+17+for+SQL+Server"
+
+# Opțiunea B: Autentificare Windows (Trusted Connection)
+# DATABASE_CONNECTION_URI="mssql+pyodbc:///?odbc_connect=DRIVER={ODBC Driver 17 for SQL Server};SERVER=server_name\\SQLEXPRESS;DATABASE=database_name;Trusted_Connection=yes"
+""", language="ini")

@@ -2,22 +2,19 @@ import requests  # Va fi necesar pentru apelurile API reale
 import pyodbc  # Pentru conexiunea la MS SQL Server
 import certifi # Pentru a oferi un pachet de certificate SSL/TLS
 import re
+from urllib.parse import urlencode
 import zipfile
 import asyncio
 import io
+import json
 from datetime import datetime
 import logging
-from xml.etree import ElementTree
+from xml.etree import ElementTree, ElementTree as ET
 import os
-
+import shlex
+import subprocess
 from sqlalchemy import text, bindparam, LargeBinary
 from typing import Any
-
-# Import direct din fișierul local, eliminând complexitatea.
-try:
-    from pkcs11_vendored import Pkcs11Adapter
-except ImportError as e:
-    raise ImportError(f"Fișierul 'pkcs11_vendored.py' lipsește sau este corupt. Eroare: {e}") from e
 
 
 class ApiANAF:
@@ -46,6 +43,10 @@ class ApiANAF:
         self.access_token = None
         self.cert = None
         self.api_base_url = None
+        self.pkcs11_pin = None
+        # Presupunem că utilitarul Java se află în același director cu scripturile Python
+        self.java_class_path = os.path.dirname(os.path.abspath(__file__))
+        self.java_class_name = "PKCS11HttpsClient_Version1"
 
         # Creăm un obiect de sesiune care va persista cookie-urile
         self.session = requests.Session()
@@ -67,23 +68,8 @@ class ApiANAF:
         elif pkcs11_lib and pkcs11_pin: # Metoda 3: Token USB (PKCS#11)
             print("INFO: Se folosește autentificarea cu token USB (PKCS#11).")
             self.auth_method = 'pkcs11'
+            self.pkcs11_pin = pkcs11_pin
             self.api_base_url = "https://webserviceapl.anaf.ro"
-            
-            try:
-                pkcs11_adapter = Pkcs11Adapter(
-                    pkcs11_library=pkcs11_lib,
-                    user_pin=pkcs11_pin
-                )
-                self.session.mount(self.api_base_url, pkcs11_adapter)
-                print("✔️ Adaptorul PKCS#11 a fost montat cu succes pe sesiune.")
-            except Exception as e:
-                error_message = str(e)
-                if "[Errno 2]" in error_message or "No such file or directory" in error_message:
-                    detailed_error = (f"**Eroare la încărcarea bibliotecii PKCS#11: {e}**\n\n"
-                                      "Cauza este probabil o dependință lipsă a fișierului `.dll`.\n\n"
-                                      "Asigurați-vă că driverul SafeNet pe 64-bit este instalat în `C:\\Program Files\\SafeNet\\...`")
-                    raise RuntimeError(detailed_error) from e
-                raise RuntimeError(f"Eroare la inițializarea adaptorului PKCS#11: {e}. Verificați PIN-ul și dacă token-ul este conectat.")
         else:
             raise ValueError("Trebuie furnizată o metodă de autentificare validă la inițializarea ApiANAF (token, certificat sau pkcs11).")
         
@@ -130,21 +116,51 @@ class ApiANAF:
                 'verify': certifi.where()
             }
 
+            response_content = None
+
             if self.auth_method == 'oauth':
                 request_args['headers']['Authorization'] = f'Bearer {self.access_token}'
+                response = self.session.post(url, **request_args)
+                response.raise_for_status()
+                response_content = response.content
             elif self.auth_method == 'cert':
                 request_args['cert'] = self.cert
-            # Pentru PKCS#11, autentificarea este gestionată automat de adaptorul montat pe sesiune
+                response = self.session.post(url, **request_args)
+                response.raise_for_status()
+                response_content = response.content
+            elif self.auth_method == 'pkcs11':
+                import tempfile
+                # Salvăm conținutul XML într-un fișier temporar pentru a-l pasa utilitarului Java
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".xml", mode="w", encoding="utf-8") as tmp_file:
+                    tmp_file.write(xml_content)
+                    temp_filename = tmp_file.name
+                
+                try:
+                    command = shlex.split(
+                        f'java -cp "{self.java_class_path}" {self.java_class_name} '
+                        f'-X POST '
+                        f'-H "Content-Type: application/xml" '
+                        f'--pin "{self.pkcs11_pin}" '
+                        f'-d "@{temp_filename}" '
+                        f'"{url}"'
+                    )
+                    process = subprocess.run(command, capture_output=True, text=True, cwd=self.java_class_path)
 
+                    if process.returncode != 0:
+                        error_output = process.stdout or ""
+                        if process.stderr: error_output += "\n--- STDERR ---\n" + process.stderr
+                        raise RuntimeError(f"Eroare la executarea utilitarului Java (exit code {process.returncode}):\n{error_output}")
 
-            response = self.session.post(url, **request_args)
-
-            # Verifică dacă request-ul a avut succes (status code 2xx)
-            response.raise_for_status()
+                    output_lines = process.stdout.splitlines()
+                    body_start_index = output_lines.index("Response Body:") + 1
+                    response_body = "\n".join(output_lines[body_start_index:])
+                    response_content = response_body.encode('utf-8')
+                finally:
+                    os.remove(temp_filename) # Ștergem fișierul temporar
 
             # 2. Returnează un xml cu informatii despre solicitarea facturii
             print(f"✔️ documentul s-a trimis cu succes catre serverul anaf urmeaza procedura de validare.")
-            return response.content
+            return response_content
         
         except requests.exceptions.RequestException as e:
             # Prindem erori specifice de rețea sau de la API (ex: 4xx, 5xx, timeout)
@@ -172,22 +188,48 @@ class ApiANAF:
             #url = f"{self.api_base_url}/test/FCTEL/rest/stareMesaj?id_incarcare={IdSolicitare}"
             
             request_args = {
-                'verify': certifi.where()
+                'verify': certifi.where(),
+                'timeout': 60 # Adăugăm un timeout de 60 de secunde
             }
+
+            response_content = None
+
             if self.auth_method == 'oauth':
                 request_args['headers'] = {'Authorization': f'Bearer {self.access_token}'}
+                response = self.session.get(url, **request_args)
+                response.raise_for_status()
+                response_content = response.content
             elif self.auth_method == 'cert':
                 request_args['cert'] = self.cert
-            # Pentru PKCS#11, autentificarea este gestionată automat de adaptorul montat pe sesiune
+                response = self.session.get(url, **request_args)
+                response.raise_for_status()
+                response_content = response.content
+            elif self.auth_method == 'pkcs11':
+                command = shlex.split(
+                    f'java -cp "{self.java_class_path}" {self.java_class_name} '
+                    f'--pin "{self.pkcs11_pin}" '
+                    f'"{url}"'
+                )
+                process = subprocess.run(command, capture_output=True, text=True, cwd=self.java_class_path)
 
-            response = self.session.get(url, **request_args)
+                if process.returncode != 0:
+                    error_output = process.stdout or ""
+                    if process.stderr:
+                        error_output += "\n--- STDERR ---\n" + process.stderr
+                    raise RuntimeError(f"Eroare la executarea utilitarului Java (exit code {process.returncode}):\n{error_output}")
 
-            # Verifică dacă request-ul a avut succes (status code 2xx)
-            response.raise_for_status()
+                # Căutăm marker-ul "Response Body:" pentru a izola XML-ul
+                output_lines = process.stdout.splitlines()
+                try:
+                    body_start_index = output_lines.index("Response Body:") + 1
+                    response_body = "\n".join(output_lines[body_start_index:])
+                    response_content = response_body.encode('utf-8')
+                except (ValueError, IndexError):
+                    raise RuntimeError(f"Nu s-a putut extrage corpul răspunsului din ieșirea Java:\n{process.stdout}")
 
             # 2. Returnează un xml IdDescarcare in caz de succes
             print(f"✔️ documentul a fost procesat cu succes de catre serverul anaf.")
-            return response.content
+            return response_content
 
         except requests.exceptions.RequestException as e:
             # Prindem erori specifice de rețea sau de la API
@@ -226,22 +268,47 @@ class ApiANAF:
         if filtru:
             params['filtru'] = filtru
 
-        url = f"{self.api_base_url}/prod/FCTEL/rest/listaMesajePaginatieFactura"
+        base_url = f"{self.api_base_url}/prod/FCTEL/rest/listaMesajePaginatieFactura"
 
         request_args = {
             'params': params,
             'verify': certifi.where()
         }
-        if self.auth_method == 'oauth':
-            request_args['headers'] = {'Authorization': f'Bearer {self.access_token}'}
-        elif self.auth_method == 'cert':
-            request_args['cert'] = self.cert
-        # Pentru PKCS#11, autentificarea este gestionată automat de adaptorul montat pe sesiune
 
         try:
-            response = self.session.get(url, **request_args)
-            response.raise_for_status()  # Va arunca o excepție pentru status-uri 4xx/5xx
-            return response.json()
+            if self.auth_method in ['oauth', 'cert']:
+                if self.auth_method == 'oauth':
+                    request_args['headers'] = {'Authorization': f'Bearer {self.access_token}'}
+                elif self.auth_method == 'cert':
+                    request_args['cert'] = self.cert
+                
+                response = self.session.get(base_url, **request_args)
+                response.raise_for_status()
+                return response.json()
+
+            elif self.auth_method == 'pkcs11':
+                full_url = f"{base_url}?{urlencode(params)}"
+                command = shlex.split(
+                    f'java -cp "{self.java_class_path}" {self.java_class_name} '
+                    f'--pin "{self.pkcs11_pin}" '
+                    f'"{full_url}"'
+                )
+                process = subprocess.run(command, capture_output=True, text=True, cwd=self.java_class_path)
+
+                if process.returncode != 0:
+                    error_output = process.stdout or ""
+                    if process.stderr:
+                        error_output += "\n--- STDERR ---\n" + process.stderr
+                    raise RuntimeError(f"Eroare la executarea utilitarului Java (exit code {process.returncode}):\n{error_output}")
+
+                output_lines = process.stdout.splitlines()
+                try:
+                    body_start_index = output_lines.index("Response Body:") + 1
+                    response_body = "\n".join(output_lines[body_start_index:])
+                    return json.loads(response_body)
+                except (ValueError, IndexError):
+                    raise RuntimeError(f"Nu s-a putut extrage corpul JSON din ieșirea Java:\n{process.stdout}")
+
         except requests.exceptions.RequestException as e:
             print(f"❌ Eroare la descărcarea listei de mesaje: {e}")
             if e.response is not None:
@@ -272,35 +339,94 @@ class ApiANAF:
             'verify': certifi.where()
         }
         if self.auth_method == 'oauth':
-            request_args['headers'] = {'Authorization': f'Bearer {self.access_token}'}
+            if 'headers' not in request_args:
+                request_args['headers'] = {}
+            request_args['headers']['Authorization'] = f'Bearer {self.access_token}'
         elif self.auth_method == 'cert':
             request_args['cert'] = self.cert
-        # Pentru PKCS#11, autentificarea este gestionată automat de adaptorul montat pe sesiune
 
         try:
-            response = self.session.get(url, **request_args)
-            response.raise_for_status()  # Aruncă excepție pentru status-uri 4xx/5xx
+            response_content = None
+            response_headers = {}
+
+            if self.auth_method in ['oauth', 'cert']:
+                response = self.session.get(url, **request_args)
+                response.raise_for_status()
+                response_content = response.content
+                response_headers = response.headers
+            
+            elif self.auth_method == 'pkcs11':
+                import tempfile
+                full_url = f"{url}?id={id_descarcare}"
+                
+                # Creăm un fișier temporar pentru a stoca descărcarea
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".zip") as tmp_file:
+                    temp_filename = tmp_file.name
+
+                try:
+                    command = shlex.split(
+                        f'java -cp "{self.java_class_path}" {self.java_class_name} ' +
+                        f'--pin "{self.pkcs11_pin}" ' +
+                        # Normalizăm calea fișierului, înlocuind \ cu / pentru compatibilitate
+                        f'-o "{temp_filename.replace(os.sep, "/")}" ' +
+                        f'"{full_url}"'
+                    )
+
+                    # PIN-ul este acum pasat direct în linia de comandă, conform noii versiuni a utilitarului Java.
+                    process = subprocess.run(command, capture_output=True, text=True, cwd=self.java_class_path)
+                    if process.returncode != 0:
+                        error_output = process.stdout or ""
+                        if process.stderr: error_output += "\n--- STDERR ---\n" + process.stderr
+                        raise RuntimeError(f"Eroare la executarea utilitarului Java (exit code {process.returncode}):\n{error_output}")
+
+
+                    # Corectăm logica: citim conținutul fișierului temporar în variabila response_content.
+                    # Problema anterioară era că se returna numele fișierului, nu conținutul său.
+                    with open(temp_filename, 'rb') as tmp_read_file:
+                        response_content = tmp_read_file.read()
+
+                    # --- VALIDARE SUPLIMENTARĂ ---
+                    # Verificăm dacă fișierul descărcat este gol. Dacă da, probabil ANAF a returnat o eroare
+                    # pe care utilitarul Java nu a interpretat-o ca atare.
+                    if not response_content:
+                        error_output = process.stdout or ""
+                        if process.stderr: error_output += "\n--- STDERR ---\n" + process.stderr
+                        error_message = f"Fișierul descărcat este gol. Răspunsul probabil de la ANAF a fost:\n{error_output}"
+                        raise ValueError(error_message)
+
+                    # --- VALIDARE CRITICĂ ---
+                    # Verificăm dacă fișierul descărcat este o arhivă ZIP validă.
+                    # Dacă nu este, tratăm conținutul ca pe un mesaj de eroare.
+                    if not response_content or not response_content.startswith(b'PK\x03\x04'):
+                        error_message = f"Răspunsul de la ANAF nu este un fișier ZIP. Conținut primit: {response_content.decode('utf-8', errors='ignore')}"
+                        # Ridicăm o excepție pentru a opri fluxul și a declanșa logica de eroare.
+                        raise ValueError(error_message)
+
+                    # Simulăm header-ul pentru a trece de validarea ulterioară
+                    response_headers['Content-Type'] = 'application/zip' # Acest header este esențial pentru validare.
+                finally:
+                    os.remove(temp_filename) # Ștergem fișierul temporar
 
             # Verificare primară: este un fișier ZIP? Ne bazăm atât pe Content-Type, cât și pe "magic number".
-            content_type = response.headers.get('Content-Type', '').lower()
+            content_type = response_headers.get('Content-Type', '').lower()
             is_zip_header = 'application/zip' in content_type
-            is_zip_content = response.content.startswith(b'PK\x03\x04')
+            is_zip_content = response_content and response_content.startswith(b'PK\x03\x04')
 
             if is_zip_header or is_zip_content:
                 print(f"✔️ Fișier ZIP descărcat cu succes pentru ID: {id_descarcare}.")
-                return response.content
+                return response_content
 
             # Dacă nu e ZIP, tratăm ca o eroare. Încercăm să parsăm ca JSON, indiferent de Content-Type.
             try:
-                error_data = response.json()
+                error_data = json.loads(response_content)
                 # ANAF returnează chei diferite: 'mesaj' la listaMesaje, 'eroare' la descarcare
                 error_message = error_data.get('eroare') or error_data.get('mesaj') or f"Eroare necunoscută la descărcarea fișierului cu ID {id_descarcare}."
                 # Folosim HTTPError pentru a fi consistent cu alte erori API
-                raise requests.exceptions.HTTPError(error_message, response=response)
-            except requests.exceptions.JSONDecodeError:
+                raise requests.exceptions.HTTPError(error_message)
+            except (json.JSONDecodeError, TypeError):
                 # Dacă nu e JSON, tratăm ca text simplu/HTML
                 error_message = f"Răspunsul de la ANAF nu este un fișier ZIP. Content-Type: '{content_type}'."
-                response_text = response.text
+                response_text = response_content.decode('utf-8', errors='ignore') if response_content else ""
                 if response_text:
                     error_message += f" Răspuns primit: '{response_text}'"
                 raise ValueError(error_message)
@@ -592,9 +718,14 @@ class ApiANAF:
                     except Exception as e:
                         # Tranzacția din blocul 'try' a fost deja anulată (rollback) automat la ieșirea din 'with'.
                         
-                        # Verificăm cazul specific al erorii de 60 de zile
-                        if "perioada de 60 de zile" in str(e):
-                            print(f"⚠️ Mesajul {message.MesId} este expirat. Se marchează ca preluat cu eroare.")
+                        error_str = str(e).lower()
+                        # Verificăm cazurile specifice de eroare care nu trebuie să oprească procesul,
+                        # ci doar să marcheze mesajul ca preluat cu eroare.
+                        if "perioada de 60 de zile" in error_str or "10 descarcari" in error_str:
+                            if "perioada de 60 de zile" in error_str:
+                                print(f"⚠️ Mesajul {message.MesId} este expirat. Se marchează ca preluat cu eroare.")
+                            else:
+                                print(f"⚠️ Limita de descărcări a fost atinsă pentru mesajul {message.MesId}. Se marchează ca preluat cu eroare.")
                             # Pornim o nouă tranzacție, separată, doar pentru a actualiza statusul.
                             with connection.begin():
                                 update_sql = text("UPDATE tblmesaje SET preluat = 1, eroare = :error_msg WHERE MesId = :mesid")
@@ -643,19 +774,14 @@ class ApiANAF:
             # Returnăm raportul cu eroarea, în loc să lăsăm funcția să crape
             return report
 
-async def check_invoice_statuses_periodically(db_engine, access_token: str):
+async def check_invoice_statuses_periodically(db_engine, anaf_client: ApiANAF):
     """
     Rulează în fundal, verificând periodic statusul facturilor trimise la ANAF
     care nu au încă un ID de descărcare.
 
     :param db_engine: Un engine SQLAlchemy pentru conexiunea la baza de date.
-    :param access_token: Token-ul de acces pentru API-ul ANAF.
+    :param anaf_client: O instanță a clasei ApiANAF, deja configurată cu metoda de autentificare.
     """
-    if not access_token:
-        print("❌ Eroare fatală: Token-ul de acces ANAF nu a fost furnizat serviciului de verificare.")
-        return
-
-    anaf_client = ApiANAF(access_token=access_token)
     print("🚀 Serviciul de verificare a statusului facturilor a pornit.")
 
     while True:
