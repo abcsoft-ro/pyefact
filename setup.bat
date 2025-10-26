@@ -6,7 +6,10 @@ REM proiectul direct de pe GitHub. El cloneaza repository-ul si apoi configureaz
 REM Pentru o distributie care contine deja fisierele, folositi un alt script (ex: installer_setup.bat).
 REM --- Configurare ---
 set "REPO_URL=https://github.com/abcsoft-ro/pyefact.git"
-set "PROJECT_DIR=pyefact"
+
+REM Extrage numele directorului din URL-ul repo-ului (ex: pyefact.git -> pyefact)
+for %%A in ("%REPO_URL%") do set "PROJECT_DIR=%%~nA"
+
 
 echo --- Pasul 1: Clonarea proiectului de pe Git ---
 
