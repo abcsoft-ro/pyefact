@@ -1,5 +1,6 @@
 @echo off
 setlocal
+
 REM --- Descriere ---
 REM Acest script este destinat dezvoltatorilor sau utilizatorilor care cloneaza
 REM proiectul direct de pe GitHub. El cloneaza repository-ul si apoi configureaza mediul.
@@ -10,25 +11,42 @@ set "REPO_URL=https://github.com/abcsoft-ro/pyefact.git"
 REM Extrage numele directorului din URL-ul repo-ului (ex: pyefact.git -> pyefact)
 for %%A in ("%REPO_URL%") do set "PROJECT_DIR=%%~nA"
 
+echo ========================================================================
+echo      -- Setup py-efactura (Developer / Git) --
+echo ========================================================================
 
-echo --- Pasul 1: Clonarea proiectului de pe Git ---
+echo.
+echo --- Pasul 1: Obținerea sau actualizarea proiectului de pe Git ---
 
-REM Verificam daca directorul exista deja pentru a evita erori la rulari multiple.
-if exist "%PROJECT_DIR%" (
-    echo Directorul '%PROJECT_DIR%' exista deja. Se omite clonarea.
+REM Scenariul 1: Scriptul este rulat din interiorul unui repository Git existent.
+if exist ".git" (
+    echo Directorul curent este deja un repository Git. Se incearca actualizarea...
+    git pull
+    if errorlevel 1 (
+        echo.
+        echo AVERTISMENT: Actualizarea (git pull) a esuat. Verificati daca aveti modificari locale sau probleme de retea.
+        echo Scriptul va continua cu versiunea locala existenta.
+    )
+REM Scenariul 2: Directorul proiectului exista, dar nu este un repo Git (ex: instalare manuala).
+) else if exist "%PROJECT_DIR%" (
+    echo Directorul '%PROJECT_DIR%' exista deja, dar nu este un repository Git.
+    echo.
+    echo AVERTISMENT: Acest script este pentru clonarea de pe GitHub.
+    echo Pentru a configura o instalare existenta, rulati 'installer_setup.bat'.
+    echo Scriptul se va opri pentru a preveni actiuni neintentionate.
+    goto:eof
+REM Scenariul 3: Directorul proiectului nu exista, deci il clonam.
 ) else (
     echo Se cloneaza repository-ul...
     git clone "%REPO_URL%"
     if errorlevel 1 (
         echo.
         echo EROARE: Clonarea de pe Git a esuat. Verificati daca Git este instalat, URL-ul este corect si aveti conexiune la internet.
-        goto:eof
+        goto :eof
     )
+    cd /d "%PROJECT_DIR%" || (echo EROARE: Nu s-a putut intra in directorul '%PROJECT_DIR%'. & goto :eof)
+    echo Am intrat in directorul: %cd%
 )
-
-REM Intram in directorul proiectului. /d este necesar in caz ca proiectul e pe alt drive.
-cd /d "%PROJECT_DIR%"
-echo Am intrat in directorul: %cd%
 
 echo.
 echo --- Pasul 2: Crearea mediului virtual Python ---
@@ -37,7 +55,7 @@ python -m venv .venv
 if errorlevel 1 (
     echo.
     echo EROARE: Crearea mediului virtual a esuat. Asigurati-va ca Python este instalat si adaugat in PATH.
-    goto:eof
+    goto :eof
 )
 echo Mediul virtual '.venv' a fost creat cu succes.
 
@@ -63,7 +81,7 @@ echo --- Pasul 5: Instalarea dependentelor din requirements.txt ---
 if not exist "requirements.txt" (
     echo.
     echo EROARE: Fisierul 'requirements.txt' nu a fost gasit in directorul proiectului.
-    goto:eof
+    goto :eof
 )
 pip install -r requirements.txt
 if errorlevel 1 (
@@ -71,7 +89,7 @@ if errorlevel 1 (
     echo EROARE: Instalarea dependentelor a esuat. Verificati fisierul 'requirements.txt' si conexiunea la internet.
     goto:eof
 )
-echo Toate dependentele au fost instalate cu succes.
+echo Toate dependentele Python au fost instalate cu succes.
 
 echo.
 echo --- Pasul 6: Instalarea browser-elor pentru Playwright ---
@@ -88,16 +106,19 @@ if errorlevel 1 (
 
 echo.
 echo.
+echo.
 echo ========================================================================
 echo      -- INSTALARE FINALIZATA CU SUCCES --
 echo ========================================================================
 echo.
 echo Proiectul este gata de utilizare.
 echo.
-echo PASII URMATORI:
-echo 1. Creati si configurati fisierul '.env' conform exemplului din pagina de Setari.
-echo 2. Pentru a porni aplicatia, deschideti un terminal nou, activati mediul virtual
-echo    (cu comanda: %PROJECT_DIR%\.venv\Scripts\activate) si apoi rulati: python launcher.py
+echo --- PASII URMATORI ---
+echo 1. Creati si configurati fisierul '.env' (puteti redenumi si edita 'env.example').
+echo 2. Pentru a porni aplicatia, rulati 'pyefact.bat' sau:
+echo    a. Deschideti un terminal nou.
+echo    b. Activati mediul virtual: %cd%\.venv\Scripts\activate
+echo    c. Rulati comanda: python launcher.py
 echo.
 
 endlocal
