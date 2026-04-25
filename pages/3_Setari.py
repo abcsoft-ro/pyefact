@@ -223,8 +223,7 @@ def display_anaf_token_status():
                             anaf_client = Anafgettoken(
                                 client_id=client_id,
                                 client_secret=client_secret,
-                                redirect_uri="", # Nu este necesar pentru acest flux
-                                pin="" # Nu este necesar pentru acest flux
+                                redirect_uri=""
                             )
                             
                             new_token_data = anaf_client.refresh_token(access_token, refresh_token)
@@ -308,10 +307,10 @@ def display_anaf_token_status():
                         st.error("Eroare: Scriptul 'get_token.py' nu a fost găsit. Asigurați-vă că se află în directorul principal al aplicației.")
 
 st.header("Configurație ANAF")
-st.markdown("Aplicația poate folosi una din cele trei metode de autentificare. Asigurați-vă că ați configurat corect variabilele pentru metoda dorită.")
+st.markdown("Aplicația folosește autentificare OAuth2. Asigurați-vă că ați configurat corect variabilele.")
 display_env_var("ANAF_CIF")
 
-st.subheader("Metoda 1: Autentificare OAuth2")
+st.subheader("Autentificare OAuth2")
 st.info("Această metodă folosește un `access_token` și un `refresh_token` pentru autentificare.")
 display_anaf_token_status()
 
@@ -319,17 +318,6 @@ st.markdown("##### Credențiale Client OAuth2")
 st.info("Aceste credențiale sunt necesare pentru a reîmprospăta token-ul.")
 display_env_var("ANAF_CLIENT_ID", sensitive=True)
 display_env_var("ANAF_CLIENT_SECRET", sensitive=True)
-
-st.subheader("Metoda 2: Autentificare cu Certificat Digital")
-st.info("Această metodă folosește un certificat digital calificat, salvat în fișiere de tip .pem.")
-display_file_path_var("ANAF_CERT_PATH")
-display_file_path_var("ANAF_KEY_PATH")
-
-st.subheader("Metoda 3: Autentificare cu Token USB (PKCS#11)")
-st.warning("Notă: Această metodă de autentificare este experimentală și în curs de implementare.")
-st.info("Această metodă folosește un token criptografic USB. Necesită calea către driverul PKCS#11 (.dll) al token-ului.")
-st.info("**Notă de securitate:** Din motive de securitate, PIN-ul **nu** se stochează în fișierul `.env`. Aplicația vă va solicita PIN-ul într-un câmp securizat atunci când este necesar.")
-display_file_path_var("PKCS11_LIB_PATH")
 
 
 st.header("Configurație Directoare")
@@ -349,34 +337,21 @@ if st.button("Testează Conexiunea la Baza de Date"):
 
 st.markdown("---")
 st.write("Exemplu de conținut pentru fișierul `.env`:")
-st.code("""# --- Setări Generale ANAF ---
-# Calea către directorul unde se vor plasa fișierele XML pentru a fi încărcate în ANAF
+st.code("""# --- Setări Generale ---
+DEBUG=False
 XML_UPLOAD_FOLDER_PATH=C:\\pyefact\\xml_upload
 
 ANAF_CIF=...
 
-# --- Metoda 1: Autentificare OAuth2 ---
+# --- Autentificare OAuth2 ---
 ANAF_ACCESS_TOKEN=...
 ANAF_REFRESH_TOKEN=...
 
 # --- Credențiale Client OAuth2 (necesare pentru refresh token) ---
 ANAF_CLIENT_ID=...
 ANAF_CLIENT_SECRET=...
+ANAF_REDIRECT_URI=...
 
-# --- Metoda 2: Autentificare cu Certificat Digital (căi absolute recomandate) ---
-ANAF_CERT_PATH=C:\\path\\to\\certificat.pem
-ANAF_KEY_PATH=C:\\path\\to\\cheie_privata.pem
-
-# --- Metoda 3: Autentificare cu Token USB (PKCS#11) - Experimental ---
-# Calea către fișierul .dll al driverului token-ului (ex: "C:\\Windows\\System32\\eTPKCS11.dll")
-PKCS11_LIB_PATH=C:\\Windows\\System32\\eTPKCS11.dll
-
-# --- Setări Bază de Date (alegeți una din opțiuni) ---
-
-# Opțiunea A: Autentificare SQL Server (cu utilizator și parolă)
-# Asigurați-vă că parola nu conține caractere speciale sau, dacă da, că este encodată (URL-encoded).
-DATABASE_CONNECTION_URI="mssql+pyodbc://user:password@server_name\\SQLEXPRESS/database_name?driver=ODBC+Driver+17+for+SQL+Server"
-
-# Opțiunea B: Autentificare Windows (Trusted Connection)
-# DATABASE_CONNECTION_URI="mssql+pyodbc:///?odbc_connect=DRIVER={ODBC Driver 17 for SQL Server};SERVER=server_name\\SQLEXPRESS;DATABASE=database_name;Trusted_Connection=yes"
+# --- Setări Bază de Date (SQLite) ---
+DATABASE_CONNECTION_URI="sqlite:///efact.db"
 """, language="ini")

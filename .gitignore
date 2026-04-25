@@ -23,8 +23,9 @@ dist/
 # Director pentru XML-uri de debug
 debug_xmls/
 
-# Director cu fișierele bazei de date (MDF, LDF)
+# Director cu fișierele bazei de date (MDF, LDF, SQLite)
 data/
+*.db
 
 # Director marketing (este folosit pentru materiale promoționale)
 marketing/

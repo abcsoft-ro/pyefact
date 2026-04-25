@@ -6,17 +6,28 @@ import os, base64
 from datetime import datetime
 
 from db_utils import get_db_engine
-from anaf_utils import get_anaf_client, display_pkcs11_auth_sidebar
+from anaf_utils import get_anaf_client
 from xml_processor import process_xml_files_from_upload_folder
 
 st.set_page_config(layout="wide", page_title="Încărcare Facturi XML")
 
 st.title("📤 Încărcare și Procesare Facturi XML")
 
-# Afișăm UI-ul pentru PIN dacă este necesar și oprim execuția paginii
-# până când PIN-ul este introdus.
-if display_pkcs11_auth_sidebar():
-    st.stop()
+def _fmt_date(val, fmt='%Y-%m-%d %H:%M:%S'):
+    if pd.isna(val):
+        return 'N/A'
+    if isinstance(val, datetime):
+        return val.strftime(fmt)
+    if isinstance(val, str):
+        try:
+            return datetime.fromisoformat(val).strftime(fmt)
+        except ValueError:
+            try:
+                return datetime.strptime(val, '%Y-%m-%d %H:%M:%S').strftime(fmt)
+            except ValueError:
+                return val
+    return str(val)
+
 
 # --- Inițializare și autentificare ---
 try:
@@ -96,10 +107,11 @@ if st.button("🚀 Trimite facturile către ANAF", type="primary"):
     try:
         with db_engine.connect() as connection:
             query = text("""
-                SELECT TOP 100 Id, fxml 
-                FROM tblFacturi 
-                WHERE (ExecutionStatus <> 0 OR ExecutionStatus IS NULL)AND fxml IS NOT NULL AND LEN(fxml) > 0
+                SELECT Id, fxml
+                FROM tblFacturi
+                WHERE (ExecutionStatus <> 0 OR ExecutionStatus IS NULL) AND fxml IS NOT NULL AND LENGTH(fxml) > 0
                 ORDER BY Id
+                LIMIT 100
             """)
             invoices_to_send = connection.execute(query).fetchall()
 
@@ -245,23 +257,24 @@ try:
             for index, row in df_paginated.iterrows():
                 row_cols = st.columns((2, 2, 3, 2, 2, 2, 3, 1))
                 row_cols[0].write(row['IDFactura'])
-                row_cols[1].write(row['IssuDate'].strftime('%d.%m.%Y') if pd.notna(row['IssuDate']) else 'N/A')
+                row_cols[1].write(_fmt_date(row['IssuDate'], '%d.%m.%Y'))
                 row_cols[2].write(row['Beneficiar'])
-                row_cols[3].markdown(f"<div style='text-align: right;'>{row['Valoare']:.2f} RON</div>", unsafe_allow_html=True)
+                row_cols[3].markdown(f"<div style='text-align: right;'>{float(row['Valoare']):.2f} RON</div>", unsafe_allow_html=True)
                 
                 # Aplicăm stilul pentru StareDocument
                 stare_doc = row['StareDocument']
                 stare_color = style_stare_document(stare_doc).split(': ')[1]
                 row_cols[4].markdown(f"<span style='color:{stare_color}'>{stare_doc if pd.notna(stare_doc) else 'N/A'}</span>", unsafe_allow_html=True)
                 
-                row_cols[5].write(str(int(row['IndexIncarcare'])) if pd.notna(row['IndexIncarcare']) and row['IndexIncarcare'] != 0 else "")
+                idx = int(row['IndexIncarcare']) if pd.notna(row['IndexIncarcare']) and row['IndexIncarcare'] != '' else 0
+                row_cols[5].write(str(idx) if idx != 0 else "")
                 row_cols[6].write(row['ErrorMessage'])
 
                 # Coloana de acțiuni
                 with row_cols[7]:
                     action_cols = st.columns(2) # Două coloane pentru butoane
                     # Butonul de ștergere este vizibil doar dacă factura nu a fost trimisă
-                    if pd.isna(row['IndexIncarcare']) or row['IndexIncarcare'] == 0:
+                    if pd.isna(row['IndexIncarcare']) or idx == 0:
                         if action_cols[0].button("🗑️", key=f"delete_{row['Id']}", help="Șterge această înregistrare"):
                             st.session_state.delete_id = row['Id']
                             st.rerun()
@@ -319,6 +332,8 @@ try:
 
             # Construim un nume de fișier relevant
             if id_factura and issue_date:
+                if isinstance(issue_date, str):
+                    issue_date = datetime.fromisoformat(issue_date)
                 date_str = issue_date.strftime('%Y-%m-%d')
                 safe_id_factura = str(id_factura).replace('/', '_').replace('\\', '_')
                 file_name = f"factura_{safe_id_factura}_{date_str}.pdf"

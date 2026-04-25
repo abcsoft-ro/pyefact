@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from sqlalchemy import text, bindparam, LargeBinary, select
 from db_utils import get_db_engine
-from anaf_utils import get_anaf_client, display_pkcs11_auth_sidebar
+from anaf_utils import get_anaf_client
 import base64, time, os, zipfile  # Pentru a codifica PDF-ul, timestamp, variabile de mediu și arhive ZIP
 from datetime import datetime, timedelta # Pentru a lucra cu date
 from dotenv import load_dotenv
@@ -10,6 +10,21 @@ from dotenv import load_dotenv
 load_dotenv() # Încarcă variabilele de mediu din fișierul .env
 
 st.set_page_config(page_title="Download Facturi ANAF", layout="wide")
+
+def _fmt_date(val, fmt='%Y-%m-%d %H:%M:%S'):
+    if pd.isna(val):
+        return 'N/A'
+    if isinstance(val, datetime):
+        return val.strftime(fmt)
+    if isinstance(val, str):
+        try:
+            return datetime.fromisoformat(val).strftime(fmt)
+        except ValueError:
+            try:
+                return datetime.strptime(val, '%Y-%m-%d %H:%M:%S').strftime(fmt)
+            except ValueError:
+                return val
+    return str(val)
 
 def _build_where_clause(tip: str = "", search_term: str = "") -> tuple[str, dict]:
     """
@@ -56,15 +71,13 @@ def load_paginated_data(table_name: str, page_number: int, page_size: int, tip: 
         **filter_params
     }
 
-    # Query optimizat pentru paginare în SQL Server
     query = text(f"""
         SELECT Id, Data_creare, IDFact, IssueDate, DueDate, LegalMonetaryTotal, DocumentCurrencyCode, Tip, Den_furnizor, Den_beneficiar, id_solicitare, id_descarcare, subiectm, tipm, continutm,
                (CASE WHEN pdf IS NULL THEN 0 ELSE 1 END) AS is_read
         FROM {table_name}
         {where_clause}
         ORDER BY Data_creare DESC
-        OFFSET :offset ROWS
-        FETCH NEXT :page_size ROWS ONLY
+        LIMIT :page_size OFFSET :offset
     """)
 
     try:
@@ -99,6 +112,12 @@ def sync_anaf_messages(cif, tip_filtru_anaf, only_count: bool = False) -> int:
             text("SELECT MAX(data_creare) FROM tblmesaje WHERE tip = :tip_filtru_anaf"),
             {"tip_filtru_anaf": tip_filtru[tip_filtru_anaf]}
         ).scalar()
+
+    if isinstance(last_sync_date, str):
+        try:
+            last_sync_date = datetime.fromisoformat(last_sync_date)
+        except ValueError:
+            last_sync_date = datetime.strptime(last_sync_date, '%Y-%m-%d %H:%M:%S')
 
     # 2. Definim limita de 60 de zile în urmă față de momentul curent
     now_dt = datetime.now()
@@ -226,8 +245,6 @@ st.title("📥 Download Facturi ANAF")
 
 # Afișăm UI-ul pentru PIN dacă este necesar și oprim execuția paginii
 # până când PIN-ul este introdus.
-if display_pkcs11_auth_sidebar():
-    st.stop()
 
 col_info, col_dl = st.columns([3, 1])
 
@@ -372,12 +389,12 @@ if total_records > 0:
                 row_cols[0].markdown(f"<p style='text-align: center; font-size: 1.2em;' title='{'Citit' if row['is_read'] else 'Necitit'}'>{status_icon}</p>", unsafe_allow_html=True)
 
                 # Restul coloanelor
-                row_cols[1].write(row['Data_creare'].strftime('%Y-%m-%d %H:%M:%S') if pd.notna(row['Data_creare']) else 'N/A')
+                row_cols[1].write(_fmt_date(row['Data_creare']))
                 row_cols[2].write(row['IDFact'])
-                row_cols[3].write(row['IssueDate'].strftime('%Y-%m-%d') if pd.notna(row['IssueDate']) else 'N/A')
-                row_cols[4].write(row['DueDate'].strftime('%Y-%m-%d') if pd.notna(row['DueDate']) else 'N/A')
+                row_cols[3].write(_fmt_date(row['IssueDate'], '%Y-%m-%d'))
+                row_cols[4].write(_fmt_date(row['DueDate'], '%Y-%m-%d'))
                 row_cols[5].write(row['Den_beneficiar'] if st.session_state.tip == "T" else row['Den_furnizor'])
-                row_cols[6].markdown(f"<div style='text-align: right; font-weight: bold; color: black'>{row['LegalMonetaryTotal']:,.2f}</div>", unsafe_allow_html=True)
+                row_cols[6].markdown(f"<div style='text-align: right; font-weight: bold; color: black'>{float(row['LegalMonetaryTotal']):,.2f}</div>", unsafe_allow_html=True)
                 row_cols[7].write(row['DocumentCurrencyCode'])
                 row_cols[8].write(row['id_descarcare'])
                 
@@ -406,7 +423,7 @@ if total_records > 0:
             # --- Afișare Linii Tabel pentru Mesaje/Erori (M/E) ---
             for index, row in data_df.iterrows():
                 row_cols = st.columns((2, 3, 2, 5))
-                row_cols[0].write(row['Data_creare'].strftime('%Y-%m-%d %H:%M:%S') if pd.notna(row['Data_creare']) else 'N/A')
+                row_cols[0].write(_fmt_date(row['Data_creare']))
                 row_cols[1].write(row['subiectm'])
                 row_cols[2].write(row['tipm'])
                 row_cols[3].write(row['continutm'])
@@ -461,6 +478,8 @@ if total_records > 0:
                 data_uri = f"data:application/pdf;base64,{base64_pdf}"
                 # Construim noul nume de fișier
                 if id_factura and issue_date:
+                    if isinstance(issue_date, str):
+                        issue_date = datetime.fromisoformat(issue_date)
                     date_str = issue_date.strftime('%Y-%m-%d')
                     # Înlocuim caracterele invalide din IDFactura (ex: /) cu _
                     safe_id_factura = str(id_factura).replace('/', '_').replace('\\', '_')

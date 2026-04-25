@@ -8,12 +8,8 @@ import time
 py_major, py_minor = sys.version_info[:2]
 if py_major == 3 and py_minor >= 13:
     print("="*80)
-    print("AVERTISMENT: Folosiți o versiune de Python (3.13+) care poate avea probleme de compatibilitate.")
-    print("Anumite dependențe critice (ex: 'cryptography') pot să nu aibă încă versiuni stabile,")
-    print("ceea ce poate duce la erori neașteptate, în special la autentificarea cu token USB.")
-    print("\nRECOMANDARE:")
-    print("  - Utilizați Python 3.12 pentru stabilitate maximă cu acest proiect.")
-    print("  - Pentru a gestiona mai multe versiuni de Python pe același sistem, folosiți un manager de versiuni precum 'pyenv-win'.")
+    print("ATENȚIE: Folosiți o versiune de Python (3.13+).")
+    print("Asigurați-vă că toate dependențele sunt compatibile cu această versiune.")
     print("="*80)
 
 # Importăm funcția care trebuie să ruleze în procesul de fundal
