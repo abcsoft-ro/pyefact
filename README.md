@@ -1,114 +1,115 @@
 # py-efactura
 
-`py-efactura` este o aplicație web dezvoltată în Python cu Streamlit, concepută pentru a simplifica interacțiunea cu sistemul național de facturare electronică, ANAF e-Factura. Oferă o interfață grafică intuitivă pentru trimiterea, verificarea și descărcarea facturilor direct din sistemul propriu.
+**py-efactura** is a Python desktop application built with Streamlit that simplifies interaction with the Romanian national electronic invoicing system (ANAF e-Factura). It provides an intuitive graphical interface for sending, verifying, and downloading invoices.
 
-![Screenshot aplicație](https://github.com/abcsoft-ro/pyefact/blob/main/assets/Incarcare_Facturi_XML.png)
+![Application screenshot](https://github.com/abcsoft-ro/pyefact/blob/main/assets/Incarcare_Facturi_XML.png)
 
-## ✨ Funcționalități Principale
+## ✨ Key Features
 
-*   **Interfață Web Modernă:** Construită cu Streamlit pentru o experiență simplă și eficientă.
-*   **Trimitere Facturi:** Încărcare și trimitere facturi în format XML către ANAF.
-*   **Descărcare Mesaje:** Sincronizare și descărcare automată a facturilor primite/trimise, mesajelor și erorilor de la ANAF.
-*   **Verificare Status:** Serviciu de fundal care verifică periodic starea facturilor trimise.
-*   **Conversie PDF:** Generare PDF din orice factură XML.
-*   **Autentificare OAuth2:** Autentificare securizată cu token de acces JWT + reînnoire automată.
-*   **Mod Debug:** Comutare simplă între endpoint-urile de test și producție ANAF (`DEBUG=True/False` în `.env`).
-*   **Bază de Date Locală SQLite:** Zero configurare — baza de date se creează automat la prima pornire.
+- **Modern Web UI** — Built with Streamlit for a clean and efficient user experience.
+- **Send Invoices** — Upload and submit XML invoices to ANAF.
+- **Download Messages** — Automatically sync received/sent invoices, messages, and error reports from ANAF.
+- **Status Verification** — Background service that periodically checks the status of submitted invoices.
+- **PDF Conversion** — Generate a PDF version of any invoice XML.
+- **OAuth2 Authentication** — Secure JWT-based token authentication with automatic renewal.
+- **Debug Mode** — Toggle between ANAF test and production endpoints via `DEBUG=True/False` in `.env`.
+- **Local SQLite Database** — Zero configuration — the database is created automatically on first launch.
 
-## 📋 Cerințe
+## 📋 Requirements
 
-*   **Python:** 3.12+ recomandat.
-*   **Git:** Pentru clonarea repository-ului.
+- **Python:** 3.12+ recommended.
+- **Git:** For cloning the repository.
 
-## 🚀 Instalare
+## 🚀 Installation
 
 ### 🪟 Windows 10+ (Installer)
 
-Descărcați și rulați programul de instalare: **[pyefactura-setup-v1.1.exe](installer/output/pyefactura-setup-v1.1.exe)**
+Download and run the installer package: **[pyefactura-setup-v1.1.exe](installer/output/pyefactura-setup-v1.1.exe)**
 
-Installerul instalează automat aplicația și dependențele necesare.
+The installer automatically sets up the application and all required dependencies.
 
-### Instalare din sursă (orice platformă)
+### Source installation (any platform)
 
-#### Pe Windows:
-1.  Rulați `setup.bat`.
+#### Windows:
+1. Run `setup.bat`.
 
-#### Pe Linux/macOS:
-1.  `chmod +x setup.sh && ./setup.sh`
+#### Linux / macOS:
+1. `chmod +x setup.sh && ./setup.sh`
 
-### Instalare Manuală
+### Manual installation
 
 ```bash
 git clone https://github.com/abcsoft-ro/pyefact.git
 cd pyefact
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 playwright install
 ```
 
-## ⚙️ Configurare
+## ⚙️ Configuration
 
-Aplicația se configurează prin fișierul `.env` din directorul rădăcină:
+The application is configured through the `.env` file in the project root directory:
 
 ```env
-# ========== Setări Generale ==========
+# ========== General Settings ==========
 DEBUG=False
 XML_UPLOAD_FOLDER_PATH=C:\pyefact\xml_upload
 
-# ========== Configurare ANAF ==========
+# ========== ANAF Configuration ==========
 ANAF_CIF="RO123456"
 
-# ========== Autentificare OAuth2 ==========
+# ========== OAuth2 Authentication ==========
 ANAF_ACCESS_TOKEN="..."
 ANAF_REFRESH_TOKEN="..."
 ANAF_CLIENT_ID="..."
 ANAF_CLIENT_SECRET="..."
 ANAF_REDIRECT_URI="https://..."
 
-# ========== Bază de Date (SQLite) ==========
+# ========== Database (SQLite) ==========
 DATABASE_CONNECTION_URI="sqlite:///efact.db"
 ```
 
-**DEBUG=False** - se folosesc endpoint-urile de producție ANAF (`/prod/FCTEL/...`).  
-**DEBUG=True** - se folosesc endpoint-urile de test (`/test/FCTEL/...`), cu avertisment vizibil în aplicație.
+**`DEBUG=False`** — uses ANAF production endpoints (`/prod/FCTEL/...`).  
+**`DEBUG=True`** — uses ANAF test endpoints (`/test/FCTEL/...`), with a visible warning banner in the app.
 
-## ▶️ Utilizare
+## ▶️ Usage
 
 ```bash
 pyefact.bat          # Windows
-python launcher.py   # Orice platformă
+python launcher.py   # Any platform
 ```
 
-Aplicația pornește un server local și deschide o pagină în browser.
+The app starts a local web server and opens a browser tab.
 
-### Reînnoire Token OAuth2
+### Token Renewal
 
-Token-urile ANAF expiră. Din pagina **Setări**:
-- **Refresh Access Token** → prelungește valabilitatea cu 3 luni
-- **Obține un Token Nou** → deschide browserul pentru autentificare completă
+ANAF OAuth2 tokens expire periodically. From the **Settings** page:
+- **Refresh Access Token** — extends the current token validity by 3 months.
+- **Get a New Token** — opens the browser for a full authentication flow.
 
-## 🏗️ Structura Proiectului
+## 🏗️ Project Structure
 
 ```
 pyefact/
-├── pages/                # Paginile aplicației Streamlit
-├── data_sql/             # Schema bazei de date SQLite
-├── anaf_api.py           # Client API ANAF (OAuth2)
-├── anaf_oauth2.py        # Gestionare token-uri OAuth2
-├── anaf_utils.py         # Factory pentru clientul ANAF
-├── background_service.py # Serviciu fundal verificare status
-├── db_utils.py           # Conexiune SQLAlchemy + creare tabele
-├── efact.py              # Pagina principală
-├── get_token.py          # Script achiziție token (Playwright)
-├── launcher.py           # Punct de intrare
-├── xml_processor.py      # Procesare fișiere XML
-├── .env                  # Configurație (ignorat de Git)
-├── requirements.txt      # Dependențe
-├── setup.bat / setup.sh  # Scripturi instalare
-└── pyefact.bat           # Lansator Windows
+├── pages/                # Streamlit pages
+├── data_sql/             # Database schema (SQLite)
+├── installer/output/     # Windows installer executable
+├── anaf_api.py           # ANAF API client (OAuth2)
+├── anaf_oauth2.py        # OAuth2 token management
+├── anaf_utils.py         # ANAF client factory
+├── background_service.py # Background invoice status checker
+├── db_utils.py           # SQLAlchemy engine + table creation
+├── efact.py              # Main page
+├── get_token.py          # Token acquisition script (Playwright)
+├── launcher.py           # Entry point
+├── xml_processor.py      # XML file processing
+├── .env                  # Configuration (gitignored)
+├── requirements.txt      # Python dependencies
+├── setup.bat / setup.sh  # Setup scripts
+└── pyefact.bat           # Windows launcher
 ```
 
-## 📄 Licență
+## 📄 License
 
-Acest proiect este distribuit sub licența MIT.
+This project is distributed under the MIT License.
