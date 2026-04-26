@@ -22,6 +22,14 @@
 
 ## 🚀 Instalare
 
+### 🪟 Windows 10+ (Installer)
+
+Descărcați și rulați programul de instalare: **[pyefactura-setup-v1.1.exe](installer/output/pyefactura-setup-v1.1.exe)**
+
+Installerul instalează automat aplicația și dependențele necesare.
+
+### Instalare din sursă (orice platformă)
+
 #### Pe Windows:
 1.  Rulați `setup.bat`.
 

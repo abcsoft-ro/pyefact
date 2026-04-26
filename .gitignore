@@ -23,6 +23,12 @@ dist/
 # Director pentru XML-uri de debug
 debug_xmls/
 
+# Director instalare setup inosetup
+installer/
+!installer/output/
+installer/output/*
+!installer/output/*.exe
+
 # Director cu fișierele bazei de date (MDF, LDF, SQLite)
 data/
 *.db
